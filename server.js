@@ -31,8 +31,11 @@ app.use((error, req, res, next) => {
 // api router
 import userRouter from "./src/router/userRouter.js";
 import bookRouter from "./src/router/bookRouter.js";
+import { isAuth } from "./src/middlewares/authMiddleware.js";
+import transactionRouter from "./src/router/TransactionRouter.js";
 app.use("/api/v1/user", userRouter);
-app.use("/api/v1/book", bookRouter);
+app.use("/api/v1/book", isAuth, bookRouter);
+app.use("/api/v1/transaction", isAuth, transactionRouter);
 //api untaught request
 app.use("*", (req, res) => {
   res.json({
