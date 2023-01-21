@@ -8,7 +8,11 @@ import {
   getBookByisbn,
   getBorrowedBooks,
 } from "../models/books/BookModels.js";
-import { postTransaction } from "../models/transaction/TransactionModels.js";
+import {
+  getTranasctionByQuery,
+  postTransaction,
+  updateTransaction,
+} from "../models/transaction/TransactionModels.js";
 import { getUserById } from "../models/users/UserModels.js";
 
 const router = express.Router();
@@ -77,7 +81,11 @@ router.post("/borrow", async (req, res, next) => {
     }
     const { isbn, thumbinal, title, author, year } = book;
     const transaction = await postTransaction({
-      borrowedBy: user._id,
+      borrowedBy: {
+        userId: user._id,
+        userFname: user.fName,
+        userLname: user.lName,
+      },
       borrowedBook: {
         isbn,
         thumbinal,
@@ -87,24 +95,22 @@ router.post("/borrow", async (req, res, next) => {
       },
     });
 
-    const updateBook = await findBookAndUpdate(bookID, {
-      borrowedBy: [...book.borrowedBy, user._id],
-    });
     if (transaction?._id) {
       const updateBook = await findBookAndUpdate(bookID, {
         borrowedBy: [...book.borrowedBy, user._id],
       });
+
+      return updateBook?._id
+        ? res.json({
+            status: "success",
+            message: "You have borrowed this book",
+            updateBook,
+          })
+        : res.json({
+            status: "error",
+            message: "Something went wron. Please try again later!",
+          });
     }
-    return updateBook?._id
-      ? res.json({
-          status: "success",
-          message: "You have borrowed this book",
-          updateBook,
-        })
-      : res.json({
-          status: "error",
-          message: "Something went wron. Please try again later!",
-        });
   } catch (error) {
     next(error);
   }
@@ -144,7 +150,12 @@ router.patch("/return", async (req, res, next) => {
     const book = await getBookByID(req.body.bookID);
     const user = await getUserById(req.headers.authorization);
 
-    if (book?._id && user?._id) {
+    const transaction = await getTranasctionByQuery(user._id, book.isbn);
+    const updateTrans = await updateTransaction(transaction?._id, {
+      returnDate: new Date(),
+    });
+
+    if (updateTrans?.returnDate) {
       const updateBook = await findBookAndUpdate(book._id, {
         $pull: { borrowedBy: user._id },
       });

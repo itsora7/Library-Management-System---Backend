@@ -1,6 +1,12 @@
 import express from "express";
 import { hashPassword, comparePassword } from "../helpers/bcrypt.js";
-import { createUser, getUserEmail } from "../models/users/UserModels.js";
+import { isAuth } from "../middlewares/authMiddleware.js";
+import {
+  createUser,
+  getUserById,
+  getUserEmail,
+  updateUserInfo,
+} from "../models/users/UserModels.js";
 
 const router = express.Router();
 
@@ -39,7 +45,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.post("/login", async (req, res, next) => {
+router.post("/login", isAuth, async (req, res, next) => {
   try {
     const { email } = req.body;
     const user = await getUserEmail(email);
@@ -64,6 +70,42 @@ router.post("/login", async (req, res, next) => {
         message: "User not found",
       });
     }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+router.patch("/password-update", async (req, res, next) => {
+  try {
+    const user = await getUserById(req.headers.authorization);
+    const { currentPassword } = req.body;
+
+    const passMatched = comparePassword(currentPassword, user?.password);
+
+    if (passMatched) {
+      const hashedPass = hashPassword(req.body.password);
+      if (hashedPass) {
+        const u = await updateUserInfo(
+          { _id: user._id },
+          { password: hashedPass }
+        );
+
+        if (u?._id) {
+          return res.json({
+            status: "success",
+            message: "Password update successfully",
+          });
+        }
+        return res.json({
+          status: "error",
+          message: "Unable to update password",
+        });
+      }
+    }
+    return res.json({
+      status: "error",
+      message: "Current password does not match, Please try again!  ",
+    });
   } catch (error) {
     console.log(error);
     next(error);

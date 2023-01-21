@@ -13,3 +13,6 @@ export const getUser = (userData) => {
 export const getUserById = (userID) => {
   return UserSchema.findById(userID);
 };
+export const updateUserInfo = (userID, userData) => {
+  return UserSchema.findOneAndUpdate(userID, userData, { new: true });
+};

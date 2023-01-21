@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 
-export const tranacitonSchema = new mongoose.Schema(
+export const transactionSchema = new mongoose.Schema(
   {
     borrowedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
+      userFname: { type: String },
+      userLname: { type: String },
     },
     borrowedBook: {
       isbn: { type: String },
@@ -21,3 +22,5 @@ export const tranacitonSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+export default mongoose.model("Transaction", transactionSchema);

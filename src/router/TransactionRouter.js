@@ -1,5 +1,5 @@
 import express from "express";
-import { getallTranasction } from "../models/transaction/TransactionModels";
+import { getallTranasction } from "../models/transaction/TransactionModels.js";
 
 const router = express.Router();
 
@@ -13,3 +13,5 @@ router.get("/", async (req, res, next) => {
     next(error);
   }
 });
+
+export default router;
