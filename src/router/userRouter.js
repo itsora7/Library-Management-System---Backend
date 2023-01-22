@@ -45,7 +45,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.post("/login", isAuth, async (req, res, next) => {
+router.post("/login", async (req, res, next) => {
   try {
     const { email } = req.body;
     const user = await getUserEmail(email);
